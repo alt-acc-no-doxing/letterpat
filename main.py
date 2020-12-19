@@ -36,12 +36,21 @@ class Patterns:
         self.curstr = self.lines[-1]
 
     @debug
-    def wave_right(self, wavesize: int):
+    def wave(self, wavesize: int, side: str):
         wavesize = wavesize if wavesize <= self.wsz else self.wsz
-        first_part = [f'{i * self.wchr}{self.str_}{(self.wsz-i)*self.wchr}' for i in range(wavesize)]
-        second_part = [f'{i * self.wchr}{self.str_}{(self.wsz - i) * self.wchr}' for i in reversed(range(wavesize))]
-        self.lines.extend(first_part + second_part)
+        if side == 'right':
+            self.lines.extend([f'{i * self.wchr}{self.str_}{(self.wsz-i)*self.wchr}' for i in range(wavesize)])
+        elif side == 'left':
+            self.lines.extend([f'{i * self.wchr}{self.str_}{(self.wsz - i) * self.wchr}' for i in reversed(range(wavesize))])
         self.curstr = self.lines[-1]
+
+    def wave_returning(self, wavesize: int, direction: str):
+        if direction == 'right':
+            self.wave(wavesize, 'right')
+            self.wave(wavesize, 'left')
+        elif direction == 'left':
+            self.wave(wavesize, 'left')
+            self.wave(wavesize, 'right')
 
     @debug
     def eat(self, side: str = 'left'):
@@ -64,10 +73,23 @@ class Patterns:
     @debug
     def shift_by_letter(self, side: str = 'left'):
         self._validate_side(side)
-        try:
-            pos = self.NON_WS_REX.search(self.curstr).start() if side == 'left' else self.NON_WS_REX.search(self.curstr).end()
-        except AttributeError:
-            pos = 0 if side == 'right' else self.strlen-1
+        spos, endpos = self.NON_WS_REX.search(self.curstr).start(), self.NON_WS_REX.search(self.curstr).end()
+        # try:
+        #     pos = .start() if side == 'left' else self.NON_WS_REX.search(self.curstr).end()
+        # except AttributeError:
+        #     pos = 0 if side == 'right' else self.strlen-1
+        shiftlines = []
+        curstr_lst = list(self.curstr)
+
+        for i in range(endpos, spos, -1):
+            charpos = spos+i
+            curchr = self.curstr[charpos]
+            while charpos > 1+endpos-i:
+                curstr_lst[charpos] = self.wchr
+                curstr_lst[charpos-1] = curchr
+                shiftlines.append(''.join(curstr_lst))
+                charpos-=1
+        self.lines += shiftlines
 
     @debug
     def eatspew(self, side: str = 'left'):
@@ -81,11 +103,13 @@ class Patterns:
 
     def run_patterns(self):
         self.plain(10)
-        self.wave_right(10)
+        self.wave_returning(10, direction='right')
         self.eat()
         self.spew()
         self.plain(10)
+        self.wave(10, side='right')
         self.shift_by_letter()
+
         self.print_lines()
 
     def print_lines(self):
