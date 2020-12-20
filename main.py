@@ -1,4 +1,5 @@
 # Author abiogenejesus in response to 60k_Risk
+# WTFPL license (AKA Do Whatever The Fuck You Want Public License)
 
 from typing import Tuple, NoReturn, Optional
 import re
@@ -222,7 +223,7 @@ class StringPatternPrinter:
 
     def print_lines(self):
         for line in self.lines:
-            print('\t',line)
+            print('\t#',line,'#')
 
 
 if __name__ == '__main__':
