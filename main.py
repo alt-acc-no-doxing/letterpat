@@ -85,15 +85,18 @@ class StringPatternPrinter:
 
     def wave(self, side: str, wavesize: Optional[int] = None):
         spos, endpos = self.REX.search(self.entire_string).regs[2]
-        wavesize = wavesize or self.entire_len
+
 
         if side == 'right':
-            wavesize = wavesize if wavesize < self.whitespace_len + self.str_len else self.entire_len - endpos
-            self.lines.extend([f'{i * self.wchr}{self.str_}{self.entire_len * self.wchr}'[:self.entire_len] for i in range(wavesize + 1)])
+            wavesize = wavesize or self.entire_len-endpos
+            wavesize = wavesize if wavesize <= self.entire_len-endpos else self.entire_len-endpos
+            self.lines.extend([f'{(i+spos) * self.wchr}{self.str_}{self.entire_len * self.wchr}'[:self.entire_len]
+                               for i in range(wavesize + 1)])
         elif side == 'left':
-            wavesize = wavesize if wavesize <= spos else spos
+            wavesize = wavesize or self.entire_len-spos
+            wavesize = wavesize if wavesize <= self.entire_len-spos else self.entire_len-spos
             self.lines.extend([f'{i * self.wchr}{self.entire_string[spos:endpos]}{(self.whitespace_len - i) * self.wchr}'
-                               for i in reversed(range(wavesize))])
+                               for i in range(spos, spos-wavesize, -1)])
         self.update()
 
     def wave_returning(self, wavesize: int, direction: str):
@@ -198,7 +201,9 @@ class StringPatternPrinter:
         self.eat()
         self.spew()
         self.plain(10)
-        self.wave('right', 10)
+        self.wave('right', 20)
+        self.wave('left', 10)
+        self.wave('right', 15)
         self.shift_letter_by_letter(side='left')
         self.wave(side='right')
         self.interweave()
@@ -217,7 +222,7 @@ class StringPatternPrinter:
 
     def print_lines(self):
         for line in self.lines:
-            print(line)
+            print('\t',line)
 
 
 if __name__ == '__main__':
